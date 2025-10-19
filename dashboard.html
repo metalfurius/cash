@@ -4,41 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Gestor de Gastos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Gestor de Gastos Mensuales</h1>
+            <h1>Gestor de Gastos</h1>
             <button id="logoutBtn">Cerrar Sesión</button>
         </div>
 
-        <div class="form-container">
-            <h2>Añadir Nuevo Gasto</h2>
-            <form id="expenseForm">
-                <input type="text" id="expenseText" placeholder="Descripción del gasto" required>
-                <input type="number" id="expenseAmount" placeholder="Monto" required>
-                <input type="date" id="expenseDate" required>
-                <select id="expenseCategory" required>
-                    <option value="Gastos Personales">Gastos Personales</option>
-                    <option value="Caprichos">Caprichos</option>
-                    <option value="Necesarios">Necesarios</option>
-                    <option value="Otros">Otros</option>
-                </select>
-                <input type="hidden" id="expenseId">
-                <button type="submit">Guardar Gasto</button>
-            </form>
+        <div class="stats-summary">
+            <div class="stat-card">
+                <h3>💰 Total Mes</h3>
+                <div class="stat-value" id="totalMonth">0€</div>
+            </div>
+            <div class="stat-card">
+                <h3>📊 Num. Gastos</h3>
+                <div class="stat-value" id="totalExpenses">0</div>
+            </div>
+            <div class="stat-card success">
+                <h3>📈 Promedio</h3>
+                <div class="stat-value" id="avgExpense">0€</div>
+            </div>
         </div>
 
-        <div class="expenses-container">
-            <h2>Listado de Gastos</h2>
-            <ul id="expenseList"></ul>
-        </div>
+        <div class="dashboard-grid">
+            <div class="form-container">
+                <h2>Nuevo Gasto</h2>
+                <form id="expenseForm">
+                    <input type="text" id="expenseText" placeholder="Descripción del gasto" required>
+                    <input type="number" id="expenseAmount" placeholder="Monto (€)" step="0.01" required>
+                    <input type="date" id="expenseDate" required>
+                    <select id="expenseCategory" required>
+                        <option value="">Selecciona una categoría</option>
+                        <option value="Gastos Personales">Gastos Personales</option>
+                        <option value="Caprichos">Caprichos</option>
+                        <option value="Necesarios">Necesarios</option>
+                        <option value="Otros">Otros</option>
+                    </select>
+                    <input type="hidden" id="expenseId">
+                    <button type="submit" id="submitBtn">Guardar Gasto</button>
+                    <button type="button" id="cancelBtn" style="display: none; background: linear-gradient(135deg, var(--gray), #475569); margin-top: 8px;">Cancelar</button>
+                </form>
+            </div>
 
-        <div class="chart-container">
-            <h2>Desglose de Gastos Mensuales</h2>
-            <canvas id="expenseChart"></canvas>
+            <div class="expenses-container">
+                <h2>Listado de Gastos</h2>
+                <ul id="expenseList"></ul>
+            </div>
+
+            <div class="chart-container">
+                <h2>Desglose Mensual</h2>
+                <canvas id="expenseChart"></canvas>
+            </div>
         </div>
     </div>
 

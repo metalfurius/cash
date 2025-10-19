@@ -4,33 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inicio de Sesión - Gestor de Gastos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <div id="login-view">
             <div class="login-container">
-                <h1>Iniciar Sesión</h1>
+                <div style="font-size: 64px; margin-bottom: 16px;">💰</div>
+                <h1>Bienvenido</h1>
+                <p style="margin-bottom: 32px; margin-top: 8px;">Inicia sesión para gestionar tus gastos</p>
                 <form id="loginForm">
                     <input type="email" id="loginEmail" placeholder="Correo electrónico" required>
                     <input type="password" id="loginPassword" placeholder="Contraseña" required>
-                    <button type="submit">Entrar</button>
+                    <button type="submit">Iniciar Sesión</button>
                     <p id="login-error-message" class="error-message"></p>
                 </form>
-                <p>¿No tienes cuenta? <a href="#" id="show-register">Regístrate</a></p>
+                <p>¿No tienes cuenta? <a href="#" id="show-register">Regístrate aquí</a></p>
             </div>
         </div>
 
         <div id="register-view" style="display: none;">
             <div class="login-container">
-                <h1>Registrarse</h1>
+                <div style="font-size: 64px; margin-bottom: 16px;">🚀</div>
+                <h1>Crear Cuenta</h1>
+                <p style="margin-bottom: 32px; margin-top: 8px;">Regístrate para empezar</p>
                 <form id="registerForm">
                     <input type="email" id="registerEmail" placeholder="Correo electrónico" required>
-                    <input type="password" id="registerPassword" placeholder="Contraseña" required>
-                    <button type="submit">Registrarse</button>
+                    <input type="password" id="registerPassword" placeholder="Contraseña (mínimo 6 caracteres)" required minlength="6">
+                    <button type="submit">Crear Cuenta</button>
                     <p id="register-error-message" class="error-message"></p>
                 </form>
-                <p>¿Ya tienes cuenta? <a href="#" id="show-login">Inicia sesión</a></p>
+                <p>¿Ya tienes cuenta? <a href="#" id="show-login">Inicia sesión aquí</a></p>
             </div>
         </div>
     </div>
