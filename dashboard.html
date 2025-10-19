@@ -9,7 +9,10 @@
 </head>
 <body>
     <div class="container">
-        <h1>Gestor de Gastos Mensuales</h1>
+        <div class="header">
+            <h1>Gestor de Gastos Mensuales</h1>
+            <button id="logoutBtn">Cerrar Sesión</button>
+        </div>
 
         <div class="form-container">
             <h2>Añadir Nuevo Gasto</h2>
@@ -39,155 +42,6 @@
         </div>
     </div>
 
-    <script type="module">
-      // Import the functions you need from the SDKs you need
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-      import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
-
-      // Your web app's Firebase configuration
-      const firebaseConfig = {
-        apiKey: "AIzaSyDkrSgPE_uqrWfv8LW9SqYLievNei3ubfI",
-        authDomain: "cash-2475a.firebaseapp.com",
-        projectId: "cash-2475a",
-        storageBucket: "cash-2475a.firebasestorage.app",
-        messagingSenderId: "869117564785",
-        appId: "1:869117564785:web:a01af2b48bea154f0508d0"
-      };
-
-      // Initialize Firebase
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
-
-      const expenseForm = document.getElementById('expenseForm');
-      const expenseList = document.getElementById('expenseList');
-      const expenseChartCanvas = document.getElementById('expenseChart').getContext('2d');
-      let expenseChart;
-
-      // Cargar y mostrar gastos
-      async function loadExpenses() {
-          expenseList.innerHTML = '';
-          const querySnapshot = await getDocs(collection(db, "gastos"));
-          let expenses = [];
-          querySnapshot.forEach((doc) => {
-              expenses.push({ id: doc.id, ...doc.data() });
-          });
-
-          expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-          expenses.forEach(expense => {
-              const li = document.createElement('li');
-              li.innerHTML = `
-                  <span>${expense.text} - <strong>${expense.amount}€</strong> - ${expense.category} - ${new Date(expense.date).toLocaleDateString()}</span>
-                  <div>
-                      <button class="edit-btn" data-id="${expense.id}">Editar</button>
-                      <button class="delete-btn" data-id="${expense.id}">Borrar</button>
-                  </div>
-              `;
-              expenseList.appendChild(li);
-          });
-          updateChart(expenses);
-      }
-
-      // Añadir o editar gasto
-      expenseForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const text = document.getElementById('expenseText').value;
-          const amount = parseFloat(document.getElementById('expenseAmount').value);
-          const date = document.getElementById('expenseDate').value;
-          const category = document.getElementById('expenseCategory').value;
-          const id = document.getElementById('expenseId').value;
-
-          if (id) {
-              // Actualizar
-              const expenseRef = doc(db, "gastos", id);
-              await updateDoc(expenseRef, { text, amount, date, category });
-          } else {
-              // Añadir nuevo
-              await addDoc(collection(db, "gastos"), { text, amount, date, category });
-          }
-
-          expenseForm.reset();
-          document.getElementById('expenseId').value = '';
-          loadExpenses();
-      });
-
-      // Funcionalidad de editar y borrar
-      expenseList.addEventListener('click', async (e) => {
-          if (e.target.classList.contains('delete-btn')) {
-              const id = e.target.dataset.id;
-              await deleteDoc(doc(db, "gastos", id));
-              loadExpenses();
-          }
-
-          if (e.target.classList.contains('edit-btn')) {
-              const id = e.target.dataset.id;
-              const li = e.target.closest('li');
-              const text = li.querySelector('span').innerText.split(' - ')[0];
-              const amount = parseFloat(li.querySelector('strong').innerText);
-              
-              const expenseDoc = await getDoc(doc(db, "gastos", id));
-              const expenseData = expenseDoc.data();
-
-              document.getElementById('expenseText').value = expenseData.text;
-              document.getElementById('expenseAmount').value = expenseData.amount;
-              document.getElementById('expenseDate').value = expenseData.date;
-              document.getElementById('expenseCategory').value = expenseData.category;
-              document.getElementById('expenseId').value = id;
-          }
-      });
-
-      // Actualizar el gráfico
-      function updateChart(expenses) {
-          const monthlyExpenses = {};
-          expenses.forEach(expense => {
-              const month = new Date(expense.date).toLocaleString('es-ES', { month: 'long', year: 'numeric' });
-              if (!monthlyExpenses[month]) {
-                  monthlyExpenses[month] = {};
-              }
-              if (!monthlyExpenses[month][expense.category]) {
-                  monthlyExpenses[month][expense.category] = 0;
-              }
-              monthlyExpenses[month][expense.category] += expense.amount;
-          });
-
-          const latestMonth = Object.keys(monthlyExpenses).sort((a,b) => new Date(b.split(' de ')[1], getMonthIndex(b.split(' de ')[0])) - new Date(a.split(' de ')[1], getMonthIndex(a.split(' de ')[0])))[0];
-          
-          if(latestMonth){
-            const chartData = monthlyExpenses[latestMonth];
-            const labels = Object.keys(chartData);
-            const data = Object.values(chartData);
-
-            if (expenseChart) {
-                expenseChart.destroy();
-            }
-
-            expenseChart = new Chart(expenseChartCanvas, {
-                type: 'pie',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Gastos de ' + latestMonth,
-                        data: data,
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.7)',
-                            'rgba(54, 162, 235, 0.7)',
-                            'rgba(255, 206, 86, 0.7)',
-                            'rgba(75, 192, 192, 0.7)'
-                        ]
-                    }]
-                }
-            });
-          }
-      }
-      
-      function getMonthIndex(monthName){
-        const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-        return months.indexOf(monthName.toLowerCase());
-      }
-
-      // Carga inicial
-      loadExpenses();
-
-    </script>
+    <script type="module" src="dashboard.js"></script>
 </body>
 </html>

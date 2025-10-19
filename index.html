@@ -7,31 +7,34 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="login-container">
-        <h1>Iniciar Sesión</h1>
-        <form id="loginForm">
-            <input type="text" id="username" placeholder="Usuario" required>
-            <input type="password" id="password" placeholder="Contraseña" required>
-            <button type="submit">Entrar</button>
-            <p id="error-message" class="error-message"></p>
-        </form>
+    <div class="container">
+        <div id="login-view">
+            <div class="login-container">
+                <h1>Iniciar Sesión</h1>
+                <form id="loginForm">
+                    <input type="email" id="loginEmail" placeholder="Correo electrónico" required>
+                    <input type="password" id="loginPassword" placeholder="Contraseña" required>
+                    <button type="submit">Entrar</button>
+                    <p id="login-error-message" class="error-message"></p>
+                </form>
+                <p>¿No tienes cuenta? <a href="#" id="show-register">Regístrate</a></p>
+            </div>
+        </div>
+
+        <div id="register-view" style="display: none;">
+            <div class="login-container">
+                <h1>Registrarse</h1>
+                <form id="registerForm">
+                    <input type="email" id="registerEmail" placeholder="Correo electrónico" required>
+                    <input type="password" id="registerPassword" placeholder="Contraseña" required>
+                    <button type="submit">Registrarse</button>
+                    <p id="register-error-message" class="error-message"></p>
+                </form>
+                <p>¿Ya tienes cuenta? <a href="#" id="show-login">Inicia sesión</a></p>
+            </div>
+        </div>
     </div>
 
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorMessage = document.getElementById('error-message');
-
-            // Usuario y contraseña simples (puedes cambiarlos)
-            if (username === 'admin' && password === 'admin') {
-                window.location.href = 'dashboard.html';
-            } else {
-                errorMessage.textContent = 'Usuario o contraseña incorrectos.';
-            }
-        });
-    </script>
+    <script type="module" src="auth.js"></script>
 </body>
 </html>
