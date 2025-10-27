@@ -14,45 +14,12 @@
     <div class="container">
         <div class="header">
             <h1>Gestor de Gastos</h1>
-            <div class="header-actions">
-                <button id="configBtn" class="config-btn">⚙️ Configurar Período</button>
-                <button id="logoutBtn">Cerrar Sesión</button>
-            </div>
-        </div>
-
-        <!-- Modal de Configuración -->
-        <div id="configModal" class="modal" style="display: none;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>⚙️ Configurar Período Mensual</h2>
-                    <button class="close-modal" id="closeModal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p style="color: var(--gray); margin-bottom: 20px;">
-                        Configura el día del mes en que comienza tu período (por ejemplo, día 25 si cobras el 25).
-                        Las estadísticas se calcularán desde ese día hasta el mismo día del mes siguiente.
-                    </p>
-                    <label for="periodStart">Día de inicio del período:</label>
-                    <select id="periodStart" required>
-                        <option value="1">Día 1 (predeterminado)</option>
-                        <option value="5">Día 5</option>
-                        <option value="10">Día 10</option>
-                        <option value="15">Día 15</option>
-                        <option value="20">Día 20</option>
-                        <option value="25">Día 25</option>
-                        <option value="28">Día 28</option>
-                    </select>
-                    <div class="period-info" id="periodInfo" style="margin-top: 20px; padding: 16px; background: #e0e7ff; border-radius: 12px; color: var(--dark);">
-                        <strong>📅 Período actual:</strong> <span id="currentPeriodText">Calculando...</span>
-                    </div>
-                    <button id="savePeriodBtn" style="margin-top: 20px;">Guardar Configuración</button>
-                </div>
-            </div>
+            <button id="logoutBtn">Cerrar Sesión</button>
         </div>
 
         <div class="stats-summary">
             <div class="stat-card">
-                <h3 id="periodLabel">💰 Total Período</h3>
+                <h3>💰 Total Mes</h3>
                 <div class="stat-value" id="totalMonth">0€</div>
             </div>
             <div class="stat-card">

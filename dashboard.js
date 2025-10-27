@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, query, where, setDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -24,116 +24,10 @@ const expenseChartCanvas = document.getElementById('expenseChart').getContext('2
 const logoutBtn = document.getElementById('logoutBtn');
 let expenseChart;
 let currentUserId;
-let userPeriodStart = 1; // Día de inicio del período (predeterminado: 1)
 
 // Set today's date as default
 const today = new Date().toISOString().split('T')[0];
 document.getElementById('expenseDate').value = today;
-
-// Modal controls
-const configBtn = document.getElementById('configBtn');
-const configModal = document.getElementById('configModal');
-const closeModal = document.getElementById('closeModal');
-const savePeriodBtn = document.getElementById('savePeriodBtn');
-const periodStartSelect = document.getElementById('periodStart');
-
-configBtn.addEventListener('click', () => {
-    configModal.style.display = 'flex';
-    updatePeriodInfo();
-});
-
-closeModal.addEventListener('click', () => {
-    configModal.style.display = 'none';
-});
-
-configModal.addEventListener('click', (e) => {
-    if (e.target === configModal) {
-        configModal.style.display = 'none';
-    }
-});
-
-periodStartSelect.addEventListener('change', updatePeriodInfo);
-
-savePeriodBtn.addEventListener('click', async () => {
-    const newPeriodStart = parseInt(periodStartSelect.value);
-    userPeriodStart = newPeriodStart;
-    
-    // Mostrar feedback de guardando
-    savePeriodBtn.textContent = 'Guardando...';
-    savePeriodBtn.disabled = true;
-    
-    try {
-        // Guardar en Firestore
-        await setDoc(doc(db, "userSettings", currentUserId), {
-            periodStart: newPeriodStart
-        });
-        
-        // Feedback de éxito
-        savePeriodBtn.textContent = '✅ Guardado';
-        savePeriodBtn.style.background = 'linear-gradient(135deg, var(--success), #059669)';
-        
-        setTimeout(() => {
-            configModal.style.display = 'none';
-            savePeriodBtn.textContent = 'Guardar Configuración';
-            savePeriodBtn.style.background = 'linear-gradient(135deg, var(--primary), var(--secondary))';
-            savePeriodBtn.disabled = false;
-            loadExpenses(); // Recargar con el nuevo período
-        }, 1000);
-        
-    } catch (error) {
-        console.error('Error al guardar configuración:', error);
-        savePeriodBtn.textContent = '❌ Error al guardar';
-        savePeriodBtn.style.background = 'linear-gradient(135deg, var(--danger), #dc2626)';
-        
-        setTimeout(() => {
-            savePeriodBtn.textContent = 'Guardar Configuración';
-            savePeriodBtn.style.background = 'linear-gradient(135deg, var(--primary), var(--secondary))';
-            savePeriodBtn.disabled = false;
-        }, 2000);
-    }
-});
-
-// Función para calcular el período actual
-function getCurrentPeriod() {
-    const now = new Date();
-    const currentDay = now.getDate();
-    
-    let periodStartDate, periodEndDate;
-    
-    if (currentDay >= userPeriodStart) {
-        // Estamos en el período actual
-        periodStartDate = new Date(now.getFullYear(), now.getMonth(), userPeriodStart);
-        periodEndDate = new Date(now.getFullYear(), now.getMonth() + 1, userPeriodStart - 1);
-    } else {
-        // Estamos en el período que empezó el mes pasado
-        periodStartDate = new Date(now.getFullYear(), now.getMonth() - 1, userPeriodStart);
-        periodEndDate = new Date(now.getFullYear(), now.getMonth(), userPeriodStart - 1);
-    }
-    
-    return { periodStartDate, periodEndDate };
-}
-
-// Función para actualizar la información del período en el modal
-function updatePeriodInfo() {
-    const tempPeriodStart = parseInt(periodStartSelect.value);
-    const now = new Date();
-    const currentDay = now.getDate();
-    
-    let startDate, endDate;
-    
-    if (currentDay >= tempPeriodStart) {
-        startDate = new Date(now.getFullYear(), now.getMonth(), tempPeriodStart);
-        endDate = new Date(now.getFullYear(), now.getMonth() + 1, tempPeriodStart - 1);
-    } else {
-        startDate = new Date(now.getFullYear(), now.getMonth() - 1, tempPeriodStart);
-        endDate = new Date(now.getFullYear(), now.getMonth(), tempPeriodStart - 1);
-    }
-    
-    const startStr = startDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
-    const endStr = endDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
-    
-    document.getElementById('currentPeriodText').textContent = `${startStr} - ${endStr}`;
-}
 
 // Cancel edit button
 document.getElementById('cancelBtn').addEventListener('click', () => {
@@ -146,22 +40,10 @@ document.getElementById('cancelBtn').addEventListener('click', () => {
 });
 
 // Auth state listener
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(auth, (user) => {
     if (user) {
         // User is signed in
         currentUserId = user.uid;
-        
-        // Cargar configuración del usuario
-        const userSettingsDoc = await getDoc(doc(db, "userSettings", currentUserId));
-        if (userSettingsDoc.exists()) {
-            userPeriodStart = userSettingsDoc.data().periodStart || 1;
-        } else {
-            userPeriodStart = 1; // Predeterminado
-        }
-        
-        periodStartSelect.value = userPeriodStart.toString();
-        updatePeriodInfo();
-        
         loadExpenses();
     } else {
         // User is signed out
@@ -191,21 +73,17 @@ async function loadExpenses() {
 
     expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    // Calculate stats usando el período personalizado
-    const { periodStartDate, periodEndDate } = getCurrentPeriod();
-    
-    const currentPeriodExpenses = expenses.filter(exp => {
+    // Calculate stats
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const currentMonthExpenses = expenses.filter(exp => {
         const expDate = new Date(exp.date);
-        return expDate >= periodStartDate && expDate <= periodEndDate;
+        return expDate.getMonth() === currentMonth && expDate.getFullYear() === currentYear;
     });
     
-    const totalMonth = currentPeriodExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-    const numExpenses = currentPeriodExpenses.length;
+    const totalMonth = currentMonthExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const numExpenses = currentMonthExpenses.length;
     const avgExpense = numExpenses > 0 ? totalMonth / numExpenses : 0;
-    
-    // Actualizar el label del período
-    const periodLabelText = `💰 Total (${periodStartDate.getDate()}/${periodStartDate.getMonth() + 1} - ${periodEndDate.getDate()}/${periodEndDate.getMonth() + 1})`;
-    document.getElementById('periodLabel').textContent = periodLabelText;
     
     document.getElementById('totalMonth').textContent = totalMonth.toFixed(2) + '€';
     document.getElementById('totalExpenses').textContent = numExpenses;
@@ -303,106 +181,92 @@ expenseList.addEventListener('click', async (e) => {
 
 // Actualizar el gráfico
 function updateChart(expenses) {
-    // Agrupar por período personalizado en lugar de por mes
-    const { periodStartDate, periodEndDate } = getCurrentPeriod();
-    
-    const currentPeriodExpenses = expenses.filter(exp => {
-        const expDate = new Date(exp.date);
-        return expDate >= periodStartDate && expDate <= periodEndDate;
+    const monthlyExpenses = {};
+    expenses.forEach(expense => {
+        const month = new Date(expense.date).toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+        if (!monthlyExpenses[month]) {
+            monthlyExpenses[month] = {};
+        }
+        if (!monthlyExpenses[month][expense.category]) {
+            monthlyExpenses[month][expense.category] = 0;
+        }
+        monthlyExpenses[month][expense.category] += expense.amount;
     });
+
+    const latestMonth = Object.keys(monthlyExpenses).sort((a,b) => new Date(b.split(' de ')[1], getMonthIndex(b.split(' de ')[0])) - new Date(a.split(' de ')[1], getMonthIndex(a.split(' de ')[0])))[0];
     
-    if (currentPeriodExpenses.length > 0) {
-        const chartData = {};
-        
-        currentPeriodExpenses.forEach(expense => {
-            if (!chartData[expense.category]) {
-                chartData[expense.category] = 0;
-            }
-            chartData[expense.category] += expense.amount;
-        });
-        
-        const labels = Object.keys(chartData);
-        const data = Object.values(chartData);
-        
-        const periodLabel = `${periodStartDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} - ${periodEndDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+    if(latestMonth){
+      const chartData = monthlyExpenses[latestMonth];
+      const labels = Object.keys(chartData);
+      const data = Object.values(chartData);
 
-        if (expenseChart) {
-            expenseChart.destroy();
-        }
+      if (expenseChart) {
+          expenseChart.destroy();
+      }
 
-        expenseChart = new Chart(expenseChartCanvas, {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Gastos del período',
-                    data: data,
-                    backgroundColor: [
-                        'rgba(99, 102, 241, 0.8)',
-                        'rgba(236, 72, 153, 0.8)',
-                        'rgba(16, 185, 129, 0.8)',
-                        'rgba(245, 158, 11, 0.8)'
-                    ],
-                    borderColor: [
-                        'rgba(99, 102, 241, 1)',
-                        'rgba(236, 72, 153, 1)',
-                        'rgba(16, 185, 129, 1)',
-                        'rgba(245, 158, 11, 1)'
-                    ],
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            font: {
-                                size: 14,
-                                weight: '600'
-                            }
-                        }
-                    },
-                    title: {
-                        display: true,
-                        text: periodLabel,
-                        font: {
-                            size: 16,
-                            weight: '700'
-                        },
-                        padding: 20
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                label += context.parsed + '€';
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((context.parsed / total) * 100).toFixed(1);
-                                label += ` (${percentage}%)`;
-                                return label;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        
-        // Restore canvas if we have data
-        const canvas = document.getElementById('expenseChart');
-        if (canvas) {
-            canvas.style.display = 'block';
-        }
-        const emptyState = document.querySelector('.chart-empty-state');
-        if (emptyState) {
-            emptyState.remove();
-        }
+      expenseChart = new Chart(expenseChartCanvas, {
+          type: 'doughnut',
+          data: {
+              labels: labels,
+              datasets: [{
+                  label: 'Gastos de ' + latestMonth,
+                  data: data,
+                  backgroundColor: [
+                      'rgba(99, 102, 241, 0.8)',
+                      'rgba(236, 72, 153, 0.8)',
+                      'rgba(16, 185, 129, 0.8)',
+                      'rgba(245, 158, 11, 0.8)'
+                  ],
+                  borderColor: [
+                      'rgba(99, 102, 241, 1)',
+                      'rgba(236, 72, 153, 1)',
+                      'rgba(16, 185, 129, 1)',
+                      'rgba(245, 158, 11, 1)'
+                  ],
+                  borderWidth: 2
+              }]
+          },
+          options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              plugins: {
+                  legend: {
+                      position: 'bottom',
+                      labels: {
+                          padding: 20,
+                          font: {
+                              size: 14,
+                              weight: '600'
+                          }
+                      }
+                  },
+                  title: {
+                      display: true,
+                      text: 'Gastos de ' + latestMonth,
+                      font: {
+                          size: 16,
+                          weight: '700'
+                      },
+                      padding: 20
+                  },
+                  tooltip: {
+                      callbacks: {
+                          label: function(context) {
+                              let label = context.label || '';
+                              if (label) {
+                                  label += ': ';
+                              }
+                              label += context.parsed + '€';
+                              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                              const percentage = ((context.parsed / total) * 100).toFixed(1);
+                              label += ` (${percentage}%)`;
+                              return label;
+                          }
+                      }
+                  }
+              }
+          }
+      });
     } else {
         // Clear chart if no data
         if (expenseChart) {
@@ -426,4 +290,21 @@ function updateChart(expenses) {
             chartContainer.appendChild(emptyState);
         }
     }
+    
+    // Restore canvas if we have data
+    if (expenses.length > 0) {
+        const canvas = document.getElementById('expenseChart');
+        if (canvas) {
+            canvas.style.display = 'block';
+        }
+        const emptyState = document.querySelector('.chart-empty-state');
+        if (emptyState) {
+            emptyState.remove();
+        }
+    }
+}
+
+function getMonthIndex(monthName){
+  const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+  return months.indexOf(monthName.toLowerCase());
 }
