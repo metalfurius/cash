@@ -18,25 +18,49 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-const expenseForm = document.getElementById('expenseForm');
-const expenseList = document.getElementById('expenseList');
-const expenseChartCanvas = document.getElementById('expenseChart').getContext('2d');
-const logoutBtn = document.getElementById('logoutBtn');
+let expenseForm;
+let expenseList;
+let expenseChartCanvas;
+let logoutBtn;
 let expenseChart;
 let currentUserId;
+let today;
 
-// Set today's date as default
-const today = new Date().toISOString().split('T')[0];
-document.getElementById('expenseDate').value = today;
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', () => {
+    expenseForm = document.getElementById('expenseForm');
+    expenseList = document.getElementById('expenseList');
+    expenseChartCanvas = document.getElementById('expenseChart').getContext('2d');
+    logoutBtn = document.getElementById('logoutBtn');
 
-// Cancel edit button
-document.getElementById('cancelBtn').addEventListener('click', () => {
-    expenseForm.reset();
-    document.getElementById('expenseId').value = '';
+    // Set today's date as default
+    today = new Date().toISOString().split('T')[0];
     document.getElementById('expenseDate').value = today;
-    document.querySelector('.form-container h2').textContent = '➕ Nuevo Gasto';
-    document.getElementById('submitBtn').textContent = 'Guardar Gasto';
-    document.getElementById('cancelBtn').style.display = 'none';
+
+    // Cancel edit button
+    document.getElementById('cancelBtn').addEventListener('click', () => {
+        expenseForm.reset();
+        document.getElementById('expenseId').value = '';
+        document.getElementById('expenseDate').value = today;
+        document.querySelector('.form-container h2').textContent = '➕ Nuevo Gasto';
+        document.getElementById('submitBtn').textContent = 'Guardar Gasto';
+        document.getElementById('cancelBtn').style.display = 'none';
+    });
+
+    // Logout
+    logoutBtn.addEventListener('click', () => {
+        signOut(auth).then(() => {
+            // Sign-out successful.
+        }).catch((error) => {
+            console.error("Error signing out: ", error);
+        });
+    });
+
+    // Add expense form handler
+    expenseForm.addEventListener('submit', handleExpenseSubmit);
+
+    // Expense list click handler
+    expenseList.addEventListener('click', handleExpenseListClick);
 });
 
 // Auth state listener
@@ -49,15 +73,6 @@ onAuthStateChanged(auth, (user) => {
         // User is signed out
         window.location.href = 'index.html';
     }
-});
-
-// Logout
-logoutBtn.addEventListener('click', () => {
-    signOut(auth).then(() => {
-        // Sign-out successful.
-    }).catch((error) => {
-        console.error("Error signing out: ", error);
-    });
 });
 
 // Cargar y mostrar gastos
@@ -126,7 +141,7 @@ async function loadExpenses() {
 }
 
 // Añadir o editar gasto
-expenseForm.addEventListener('submit', async (e) => {
+async function handleExpenseSubmit(e) {
     e.preventDefault();
     const text = document.getElementById('expenseText').value;
     const amount = parseFloat(document.getElementById('expenseAmount').value);
@@ -150,10 +165,10 @@ expenseForm.addEventListener('submit', async (e) => {
     document.getElementById('submitBtn').textContent = 'Guardar Gasto';
     document.getElementById('cancelBtn').style.display = 'none';
     loadExpenses();
-});
+}
 
 // Funcionalidad de editar y borrar
-expenseList.addEventListener('click', async (e) => {
+async function handleExpenseListClick(e) {
     if (e.target.classList.contains('delete-btn')) {
         const id = e.target.dataset.id;
         await deleteDoc(doc(db, "gastos", id));
@@ -177,7 +192,7 @@ expenseList.addEventListener('click', async (e) => {
             document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
-});
+}
 
 // Actualizar el gráfico
 function updateChart(expenses) {
